@@ -1,0 +1,3 @@
+[submodule "external/Jsonify"]
+	path = external/Jsonify
+	url = https://github.com/birds3345/Jsonify.git

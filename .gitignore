@@ -1,0 +1,13 @@
+bin/
+obj/
+
+#project related files
+Roblox-Studio-RPC-Settings.json
+discord_game_sdk.dll
+
+#visual studio
+.vs/
+**.sln
+**.vcxproj
+**.vcxproj.filters
+**.vcxproj.user
