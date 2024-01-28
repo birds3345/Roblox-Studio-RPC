@@ -21,12 +21,12 @@ namespace Settings
 		if (std::filesystem::exists(std::filesystem::current_path() / getName())) return;
 
 		Jsonify::JsonValue root;
-		root["ClientId"] = Jsonify::JsonValue::Null();
+		root["ClientId"] = "1199942284653903882";
 
 		root["ConsoleEnabled"] = false;
 
 		root["UseLocalhost"] = true;
-		root["LocalhostPort"] = Jsonify::JsonValue::Null();
+		root["LocalhostPort"] = 8129;
 
 		root["ShowScriptName"] = true;
 		root["ShowGameName"] = true;
