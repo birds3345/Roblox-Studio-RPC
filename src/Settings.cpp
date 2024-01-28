@@ -27,6 +27,8 @@ namespace Settings
 		root["Localhost"] = true;
 		root["LocalhostPort"] = Jsonify::JsonValue::Null();
 
+		root["ShowGameName"] = true;
+
 		
 
 		std::ofstream file(std::filesystem::current_path() / getName());

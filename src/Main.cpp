@@ -246,6 +246,8 @@ int main()
 
 	discord::ClientId clientId = stoll(settings.getOrDefault("ClientId", "1199942284653903882").as<std::string>());
 
+	bool showGameName = settings.getOrDefault("ShowGameName", true).as<bool>();
+
 	discord::Core* core;
 
 	auto result = discord::Core::Create(clientId, DiscordCreateFlags_Default, &core);
@@ -281,7 +283,8 @@ int main()
 			lastScript = script;
 			lastGameName = gameName;
 			
-			activity.SetDetails(gameName.c_str());
+			if (showGameName)
+				activity.SetDetails(gameName.c_str());
 			
 			switch (state)
 			{
