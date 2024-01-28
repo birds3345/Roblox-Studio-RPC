@@ -22,11 +22,13 @@ namespace Settings
 
 		Jsonify::JsonValue root;
 		root["ClientId"] = Jsonify::JsonValue::Null();
+
 		root["ConsoleEnabled"] = false;
 
-		root["Localhost"] = true;
+		root["UseLocalhost"] = true;
 		root["LocalhostPort"] = Jsonify::JsonValue::Null();
 
+		root["ShowScriptName"] = true;
 		root["ShowGameName"] = true;
 
 		

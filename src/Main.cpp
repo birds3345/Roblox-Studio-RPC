@@ -183,7 +183,7 @@ int main()
 
 	Jsonify::JsonValue settings = Settings::getSettings();
 
-	if (settings.getOrDefault("Localhost", true))
+	if (settings.getOrDefault("UseLocalhost", true))
 	{
 		int port = settings.getOrDefault("LocalhostPort", 8129).as<int>();
 
@@ -247,6 +247,7 @@ int main()
 	discord::ClientId clientId = stoll(settings.getOrDefault("ClientId", "1199942284653903882").as<std::string>());
 
 	bool showGameName = settings.getOrDefault("ShowGameName", true).as<bool>();
+	bool showScriptName = settings.getOrDefault("ShowScriptName", true).as<bool>();
 
 	discord::Core* core;
 
@@ -301,7 +302,7 @@ int main()
 				break;
 
 			case State::Scripting:
-				activity.SetState((std::string("Scripting - ") + script).c_str());
+				activity.SetState((showScriptName ? (std::string("Scripting - ") + script) : std::string("Scripting")).c_str());
 				break;
 
 			default:
