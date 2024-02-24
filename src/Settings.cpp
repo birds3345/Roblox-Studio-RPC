@@ -31,7 +31,8 @@ namespace Settings
 		root["ShowScriptName"] = true;
 		root["ShowGameName"] = true;
 
-		
+		root["DisabledStates"].setType(Jsonify::JsonValue::Type::Array);
+
 
 		std::ofstream file(std::filesystem::current_path() / getName());
 

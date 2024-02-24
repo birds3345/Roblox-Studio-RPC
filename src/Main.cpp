@@ -157,7 +157,7 @@ int main()
 
 	if (!std::filesystem::exists(std::filesystem::current_path() / "discord_game_sdk.dll"))
 	{
-		MessageBoxA(NULL, "discord_game_sdk.dll not found, find it from the game sdk included in this project or download it and put it in the working directory", "DLL NOT FOUND", MB_OK | MB_ICONERROR);
+		MessageBoxA(NULL, "discord_game_sdk.dll not found, find it in the project releases or download it from the official Discord website and put it in the working directory", "DLL NOT FOUND", MB_OK | MB_ICONERROR);
 
 		return 0;
 	}
@@ -172,7 +172,7 @@ int main()
 		{
 			Settings::makeDefault();
 
-			MessageBoxA(NULL, "The settings file has been created, rerun this exe to start", "RESTART", MB_OK | MB_ICONINFORMATION);
+			MessageBoxA(NULL, "The settings file has been created, rerun this program to start", "RESTART", MB_OK | MB_ICONINFORMATION);
 
 			return 0;
 		}
@@ -244,6 +244,33 @@ int main()
 	}
 #endif
 
+	bool disabledStates[5] = {};
+
+	if (settings.contains("DisabledStates"))
+	{
+		for (int i = 0; i < settings["DisabledStates"].size(); i++)
+		{
+			std::string str = settings["DisabledStates"][i].as<std::string>();
+			
+			if (str == "Idle")
+			{
+				disabledStates[(int)State::Idle] = true;
+			}
+			else if (str == "Scripting")
+			{
+				disabledStates[(int)State::Scripting] = true;
+			}
+			else if (str == "Building")
+			{
+				disabledStates[(int)State::Building] = true;
+			}
+			else if (str == "Playtesting")
+			{
+				disabledStates[(int)State::Playtesting] = true;
+			}
+		}
+	}
+
 	discord::ClientId clientId = stoll(settings.getOrDefault("ClientId", "1199942284653903882").as<std::string>());
 
 	bool showGameName = settings.getOrDefault("ShowGameName", true).as<bool>();
@@ -290,19 +317,23 @@ int main()
 			switch (state)
 			{
 			case State::Idle:
-				activity.SetState("Idle");
+				if (!disabledStates[(int)State::Idle])
+					activity.SetState("Idle");
 				break;
 
 			case State::Building:
-				activity.SetState("Building");
+				if (!disabledStates[(int)State::Building])
+					activity.SetState("Building");
 				break;
 
 			case State::Playtesting:
-				activity.SetState("Playtesting");
+				if (!disabledStates[(int)State::Playtesting])
+					activity.SetState("Playtesting");
 				break;
 
 			case State::Scripting:
-				activity.SetState((showScriptName ? (std::string("Scripting - ") + script) : std::string("Scripting")).c_str());
+				if (!disabledStates[(int)State::Scripting])
+					activity.SetState((showScriptName ? (std::string("Scripting - ") + script) : std::string("Scripting")).c_str());
 				break;
 
 			default:
