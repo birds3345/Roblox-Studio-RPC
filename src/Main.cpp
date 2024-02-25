@@ -1,9 +1,11 @@
+#include <limits>
 #include <iostream>
 #include <filesystem>
 #include <thread>
 #include <chrono>
 #include <format>
 
+#include <conio.h>
 #include <WinSock2.h>
 #include <WS2tcpip.h>
 #include <Windows.h>
@@ -19,6 +21,8 @@ static State state = State::Idle;
 static std::string script = "Unknown";
 static std::string gameName = "Unknown";
 static long long playtestTime = 0;
+
+
 
 bool isProcessRunning(const std::wstring& name)
 {
@@ -42,6 +46,37 @@ bool isProcessRunning(const std::wstring& name)
 	CloseHandle(snapshot);
 
 	return false;
+}
+
+void killProcess(const std::wstring& name)
+{
+	PROCESSENTRY32 entry;
+	entry.dwSize = sizeof(PROCESSENTRY32);
+
+	HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, NULL);
+
+	if (Process32First(snapshot, &entry))
+	{
+		do {
+			if (name == entry.szExeFile && entry.th32ProcessID != GetCurrentProcessId())
+			{
+				CloseHandle(snapshot);
+
+				HANDLE process = OpenProcess(PROCESS_TERMINATE, FALSE, entry.th32ProcessID);
+				
+				if (process)
+				{
+					TerminateProcess(process, 9);
+
+					CloseHandle(process);
+				}
+
+				return;
+			}
+		} while (Process32Next(snapshot, &entry));
+	}
+
+	CloseHandle(snapshot);
 }
 
 void sendall(SOCKET socket, const char* buf, int len, int flags)
@@ -142,13 +177,45 @@ void serverLoop(SOCKET wsaSocket)
 	}
 }
 
+inline void waitAndClose()
+{
+	std::cout << "(Press any key to close)" << std::endl;
+
+	int _ = _getch();
+}
+
+inline int getResponse(int rangeMin, int rangeMax)
+{
+	int res = 0;
+	
+	do {
+		std::cin >> res;
+
+		if (std::cin.fail() || res < rangeMin || res > rangeMax) {
+			std::cin.clear();
+			std::cin.ignore((std::numeric_limits<std::streamsize>::max)(), '\n');
+
+			std::cout << "Invalid input. Enter a number between " << rangeMin << " and " << rangeMax << "." << std::endl;
+		}
+	} while (res < rangeMin || res > rangeMax);
+
+	return res;
+}
+
 int main()
 {
 	HANDLE mutex = CreateMutexA(NULL, FALSE, "RSD_RPC_MUTEX");
 
 	if (GetLastError() == ERROR_ALREADY_EXISTS)
 	{
-		MessageBoxA(NULL, "Roblox Studio Discord RPC is already running", "ALREADY RUNNING", MB_OK | MB_ICONERROR);
+		std::cout << "Roblox Studio Discord RPC is already running" << std::endl;
+		std::cout << "1 - Exit and close running program" << std::endl;
+		std::cout << "2 - Exit" << std::endl;
+
+		if (getResponse(1, 2) == 1)
+			killProcess(L"Roblox-Studio-RPC.exe");
+
+		waitAndClose();
 
 		return 0;
 	}
@@ -157,28 +224,29 @@ int main()
 
 	if (!std::filesystem::exists(std::filesystem::current_path() / "discord_game_sdk.dll"))
 	{
-		MessageBoxA(NULL, "discord_game_sdk.dll not found, find it in the project releases or download it from the official Discord website and put it in the working directory", "DLL NOT FOUND", MB_OK | MB_ICONERROR);
+		std::cout << "discord_game_sdk.dll not found, find it in the project releases or download it from the official Discord website and put it in the working directory" << std::endl;
+		
+		waitAndClose();
 
 		return 0;
 	}
 
 	if (!Settings::fileExists())
 	{
-		int res = MessageBoxA(NULL, "The settings file was not found, do you want to create one in the working directory?", "SETTING FILE NOT FOUND", MB_YESNOCANCEL | MB_ICONINFORMATION);
+		std::cout << "The settings file was not found, do you want to create one in the working directory?" << std::endl;
+		std::cout << "1 - Yes" << std::endl;
+		std::cout << "2 - No" << std::endl;
 
-		switch (res)
-		{
-		case IDYES:
+		if (getResponse(1, 2) == 1)
 		{
 			Settings::makeDefault();
 
-			MessageBoxA(NULL, "The settings file has been created, rerun this program to start", "RESTART", MB_OK | MB_ICONINFORMATION);
+			std::cout << "The settings file has been created, rerun this program to start" << std::endl;
+		}
 
-			return 0;
-		}
-		default:
-			return 0;
-		}
+		waitAndClose();
+
+		return 0;
 	}
 
 	Jsonify::JsonValue settings = Settings::getSettings();
@@ -193,7 +261,9 @@ int main()
 
 		if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
 		{
-			MessageBoxA(NULL, "WSAStartup failed", "LOCALHOST FAILURE", MB_OK | MB_ICONERROR);
+			std::cout << "WSAStartup failed" << std::endl;
+
+			waitAndClose();
 
 			return 0;
 		}
@@ -201,7 +271,9 @@ int main()
 		SOCKET wsaSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 		if (wsaSocket == INVALID_SOCKET)
 		{
-			MessageBoxA(NULL, "failed to create socket", "LOCALHOST FAILURE", MB_OK | MB_ICONERROR);
+			std::cout << "Failed to create socket" << std::endl;
+
+			waitAndClose();
 
 			return 0;
 		}
@@ -213,14 +285,18 @@ int main()
 
 		if (bind(wsaSocket, (SOCKADDR*)&server, sizeof(server)) != 0)
 		{
-			MessageBoxA(NULL, "failed to bind socket", "LOCALHOST FAILURE", MB_OK | MB_ICONERROR);
+			std::cout << "Failed to bind socket" << std::endl;
+
+			waitAndClose();
 
 			return 0;
 		}
 
 		if (listen(wsaSocket, SOMAXCONN) != 0)
 		{
-			MessageBoxA(NULL, "failed listen to socket", "LOCALHOST FAILURE", MB_OK | MB_ICONERROR);
+			std::cout << "Failed to listen to socket" << std::endl;
+
+			waitAndClose();
 
 			return 0;
 		}
@@ -295,7 +371,9 @@ int main()
 	{
 		if (!core)
 		{
-			MessageBoxA(NULL, "An error occured while running", "ERROR", MB_OK | MB_ICONERROR);
+			std::cout << "An error occured while running" << std::endl;
+			
+			waitAndClose();
 
 			return 0;
 		}
