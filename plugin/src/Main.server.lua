@@ -1,5 +1,3 @@
-local ScriptEditorService = game:GetService("ScriptEditorService")
-
 local HttpService = game:GetService("HttpService")
 
 local MarketplaceService = game:GetService("MarketplaceService")
@@ -35,17 +33,13 @@ local function send(): ()
 	end)
 end
 
-local lastSendTime = os.clock()
 local function set(state: number, editingScript: string?): ()
-	local doSend = state ~= currentState or editingScript ~= currentScript
-	
 	currentState = state
 	currentScript = editingScript or ""
 	
 	lastActionTime = os.clock()
 	
-	if doSend then
-		lastSendTime = os.clock()
+	if state ~= currentState or editingScript ~= currentScript then
 		send()
 	end
 end
